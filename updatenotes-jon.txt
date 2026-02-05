@@ -1,3 +1,5 @@
+==========First Commit============
+
 Major Push
 
 1. Added folder:
@@ -29,3 +31,10 @@ Major Push
 4. Changed app name on AndroidManifest.xml to "AquaVerse"
 
 5. Moving all pages file to "pages" folder
+
+==========Second Commit============
+
+Minor Push
+
+1. Added logo picture for app icon
+2. revising pubspec.yaml
