@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../class/news_class.dart';
 import '../../components/latestnewstile.dart';
 
-
 class HomePage extends StatefulWidget {
   final Function(int)? onTabChange;
   const HomePage({super.key, this.onTabChange});
@@ -14,7 +13,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String userName = "{User}";
+  String userName = "Diver"; 
+  
   late Future<List<News>> _newsFuture = fetchNews();
 
   final PageController _pageController = PageController(
@@ -27,7 +27,22 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _getUserInfo(); 
     _startAutoScroll();
+  }
+
+  void _getUserInfo() {
+    final user = Supabase.instance.client.auth.currentUser;
+    
+    if (user != null && user.userMetadata != null) {
+      final String? fullName = user.userMetadata!['name'];
+      
+      if (fullName != null && fullName.isNotEmpty) {
+        setState(() {
+          userName = fullName.split(' ')[0];
+        });
+      }
+    }
   }
 
   void _startAutoScroll() {
@@ -38,11 +53,13 @@ class _HomePageState extends State<HomePage> {
         } else {
           _currentPage = 0;
         }
-        _pageController.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
-        );
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            _currentPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
       }
     });
   }
@@ -124,12 +141,16 @@ class _HomePageState extends State<HomePage> {
                           bottomLeft: Radius.circular(35),
                           bottomRight: Radius.circular(-35),
                         ),
-                        image: const DecorationImage(
+                        image: DecorationImage(
                           image: NetworkImage(
                             "https://ccuigpzseuhwietjcyyi.supabase.co/storage/v1/object/public/aquaverse/assets/images/home/Banner-no-logo.jpg"
                           ),
                           fit: BoxFit.cover,
                           opacity: 0.75,
+                          colorFilter: ColorFilter.mode(
+                            const Color.fromARGB(255, 75, 172, 251).withOpacity(0.5), 
+                            BlendMode.srcOver
+                          ),
                         ),
                       ),
                       child: Column(
@@ -231,7 +252,6 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                           
-                          // << ADDED VIEW ALL BUTTON >>
                           TextButton(
                             onPressed: () {
                               if (widget.onTabChange != null) {
@@ -286,7 +306,7 @@ class _HomePageState extends State<HomePage> {
 
                               const SizedBox(height: 6),
 
-                              // << ADDED: DOT INDICATOR >>
+                              // DOT INDICATOR
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: List.generate(
