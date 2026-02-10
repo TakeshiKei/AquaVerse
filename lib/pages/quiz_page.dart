@@ -49,7 +49,6 @@ class _QuizPageState extends State<QuizPage> {
       .getPublicUrl('assets/images/quiz/PlayButton.png'); 
   }
 
-
   Future<Map<String, dynamic>> fetchUserData() async {
     final res = await supabase
         .from('profiles')
@@ -339,7 +338,7 @@ class ProfilPrestasi extends StatelessWidget {
                 Text(
                   "Profil Prestasi",
                   style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 24,
                     fontFamily: 'Montserrat',
                     fontWeight: FontWeight.bold,
                     color:
@@ -394,7 +393,7 @@ class ProfilPrestasi extends StatelessWidget {
                           ),
                           child: Text('USN: $username',
                             style: const TextStyle(
-                                fontSize: 14,
+                                fontSize: 15,
                                 )),
                         ), 
                         const SizedBox(height: 1,), 
@@ -599,7 +598,7 @@ class MulaiKuis extends StatelessWidget {
                           const Text(
                             "MULAI",
                             style: TextStyle(
-                              fontSize: 26,
+                              fontSize: 28,
                               fontFamily: "Montserrat",
                               fontWeight: FontWeight.bold,
                               color: Color.fromRGBO(63, 68, 102, 1),

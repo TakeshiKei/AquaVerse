@@ -6,6 +6,7 @@ import 'pages/display_page.dart';
 import 'pages/login_page.dart'; 
 import 'pages/quiz_page.dart'; 
 import 'pages/quiz_fill.dart'; 
+import 'pages/quiz_result.dart'; 
 
 Future<void> main() async{ 
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false, 
-      home: const QuizFill()
+      home: const SplashScreen()
     ); 
   }
 }

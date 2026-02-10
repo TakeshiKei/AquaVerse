@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 10,),
                       const Text("Gunakan akun terdaftar Anda untuk memasuki AquaVerse dan telusuri rahasia dalam laut! ", 
                         style: TextStyle(
-                          fontSize: 14, 
+                          fontSize: 15, 
                           color: Color.fromRGBO(45, 45, 45, 1)
                         ),
                       ),
@@ -203,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
                       const Text(
                         "Atau Registrasi untuk AquaAccount. Dengan Registrasi, Anda setuju dengan Syarat dan Ketentuan.", 
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           color: Color.fromRGBO(45, 45, 45, 1)
                         ),
                       ),
@@ -225,7 +225,7 @@ class _LoginPageState extends State<LoginPage> {
                           child: const Text(
                             "Registrasi", 
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               color: Colors.black
                             ),
                           ),
@@ -253,7 +253,7 @@ class _LoginPageState extends State<LoginPage> {
                             : const Text(
                                 "Masuk",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   color: Colors.white
                                 ),
                               ),

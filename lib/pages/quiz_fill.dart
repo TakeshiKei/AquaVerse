@@ -103,51 +103,57 @@ class _BuildQuizState extends State<BuildQuizUI> {
   bool hasAnswered = false; 
   int score = 0; 
   bool isProcessing=false; 
-  int totalTime=10; 
-  int remainingTime=10; 
+
+  late int totalTime; 
+  late ValueNotifier<int> remainingTimeNotifier; 
   Timer? timer; 
 
   @override
   void initState(){
     super.initState(); 
-    startTimer(); 
+    _startQuestion(); 
   }
 
-  void startTimer(){
+  void _startQuestion(){
     final question = widget.quizData[currentIndex]; 
     totalTime = question['time_limit'];
-    remainingTime = totalTime; 
+    remainingTimeNotifier = ValueNotifier<int>(totalTime); 
+
     timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (mounted) {
-        setState(() {
-          remainingTime--;
-          if (remainingTime <= 0) {
-            // Auto submit jawaban jika waktu habis
-            hasAnswered = true;
-            submitAnswer();  // fungsi untuk menangani jawaban
-            timer?.cancel();
-          }
-        });
+      if(!mounted) return; 
+
+      if(remainingTimeNotifier.value > 0){
+        remainingTimeNotifier.value--; 
+      }else{
+        t.cancel(); 
+        _submitAnswer(auto: true); 
       }
     });
   }
 
-  void submitAnswer() {
-    // misal update skor atau logika jawaban benar/salah
-    // lalu lanjut ke soal berikutnya
+  void _submitAnswer({bool auto = false}) {
+    // Update skor hanya jika user submit (auto=false)
+    if (!auto && selectedChoiceIndex != null) {
+      final selectedChoice =
+          widget.quizData[currentIndex]['quiz_choices'][selectedChoiceIndex];
+      if (selectedChoice['is_correct'] == true) score++;
+    }
+
+    timer?.cancel();
+
     Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return; // halaman sudah tidak ada, skip
+      if (!mounted) return;
 
       if (currentIndex + 1 < widget.quizData.length) {
         setState(() {
           currentIndex++;
           selectedChoiceIndex = null;
           hasAnswered = false;
+          isProcessing = false; 
         });
-        startTimer(); // reset timer untuk soal baru
+        _startQuestion(); // reset timer untuk soal baru
       } else {
-        // soal habis, arahkan ke halaman hasil
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -159,33 +165,28 @@ class _BuildQuizState extends State<BuildQuizUI> {
         );
       }
     });
-
   }
 
   @override
   void dispose() {
-    timer?.cancel();
+    timer?.cancel(); 
+    remainingTimeNotifier.dispose(); 
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context){
-
-    final question = widget.quizData[currentIndex]; 
-    final String questionText = question['question_text'];
-    final String quizBackgroundUrl = widget.quizBackgroundUrl; 
-
-    final List<dynamic> choices = question['quiz_choices'] ?? [];
-
-    final double progress = remainingTime / totalTime; 
+  Widget build(BuildContext context) {
+    final question = widget.quizData[currentIndex];
+    final questionText = question['question_text'];
+    final quizBackgroundUrl = widget.quizBackgroundUrl;
+    final choices = question['quiz_choices'] ?? [];
 
     return SafeArea(
       child: Stack(
         children: [
-          Container(
-            color: const Color.fromRGBO(217, 246, 252, 1),
-          ),
+          Container(color: const Color.fromRGBO(217, 246, 252, 1)),
 
+          // Background image
           Positioned(
             top: 0,
             left: 0,
@@ -208,31 +209,36 @@ class _BuildQuizState extends State<BuildQuizUI> {
 
           const FrostedGlass(),
 
+          // Content scrollable
           Positioned.fill(
-            top: 55, 
+            top: 55,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
               child: Column(
                 children: [
                   Stack(
                     alignment: Alignment.topCenter,
-                    clipBehavior: Clip.none, 
+                    clipBehavior: Clip.none,
                     children: [
-
                       Padding(
-                        padding: const EdgeInsets.only(top: 45), 
+                        padding: const EdgeInsets.only(top: 45),
                         child: ProgressAndQuestionCard(
                           questionText: questionText,
-                          currentIndex: currentIndex
+                          currentIndex: currentIndex,
                         ),
                       ),
-
                       Positioned(
                         top: 0,
-                        child: QuestionNumber(
-                          currentIndex: currentIndex, 
-                          progress: progress, 
-                          remainingTime: remainingTime,
+                        child: ValueListenableBuilder<int>(
+                          valueListenable: remainingTimeNotifier,
+                          builder: (context, remainingTime, child) {
+                            final progress = remainingTime / totalTime;
+                            return QuestionNumber(
+                              currentIndex: currentIndex,
+                              progress: progress,
+                              remainingTime: remainingTime,
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -242,82 +248,55 @@ class _BuildQuizState extends State<BuildQuizUI> {
 
                   ChoiceCard(
                     choices: choices,
-                    selectedIndex: selectedChoiceIndex, 
+                    selectedIndex: selectedChoiceIndex,
+                    hasAnswered: hasAnswered,
                     onChoiceSelected: (index) {
-                      if(!hasAnswered){
+                      if (!hasAnswered) {
                         setState(() {
-                        selectedChoiceIndex = index; 
-                      });
+                          selectedChoiceIndex = index;
+                        });
                       }
-                    }, 
-                    hasAnswered: hasAnswered
+                    },
                   ),
 
                   const SizedBox(height: 20),
 
                   ElevatedButton(
-                    onPressed: (){
-                      
-                      if(selectedChoiceIndex == null || isProcessing){
+                    onPressed: () {
+                      if (selectedChoiceIndex == null || isProcessing) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Pilih jawaban terlebih dahulu!')),
+                          const SnackBar(
+                              content: Text('Pilih jawaban terlebih dahulu!')),
                         );
                         return;
                       }
 
                       setState(() {
-                        hasAnswered = true; 
-                        isProcessing=true; 
-
-                        final selectedChoice = widget.quizData[currentIndex]['quiz_choices'][selectedChoiceIndex]; 
-
-                        if(selectedChoice['is_correct'] == true){
-                          score++; 
-                        }
-
-                        Future.delayed(const Duration(seconds: 1), () {
-                          setState(() {
-                            if (currentIndex < widget.quizData.length - 1) {
-                              // soal berikutnya
-                              currentIndex++;
-                              selectedChoiceIndex = null;
-                              hasAnswered = false;
-                              isProcessing = false; 
-                            } else {
-                              // semua soal selesai, navigasi ke halaman hasil
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => QuizResult(
-                                    totalQuestions: widget.quizData.length,
-                                    score: score,
-                                  ),
-                                ),
-                              );
-                            }
-                          });
-                        });
+                        hasAnswered = true;
+                        isProcessing = true;
                       });
+
+                      _submitAnswer();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, 
-                      elevation: 2, 
+                      backgroundColor: Colors.white,
+                      elevation: 2,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadiusGeometry.circular(10)
-                      ), 
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 40, 
-                        vertical: 7
-                      )
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 40, vertical: 7),
                     ),
-                    
-                    child: Text('Cek Jawaban', style: TextStyle(
-                      fontSize: 24, 
-                      fontFamily: 'Afacad', 
-                      fontWeight: FontWeight.w700, 
-                      color: const Color.fromRGBO(118, 181, 193, 1)
-                    ),),
-                  )
+                    child: const Text(
+                      'Cek Jawaban',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontFamily: 'Afacad',
+                        fontWeight: FontWeight.w700,
+                        color: Color.fromRGBO(118, 181, 193, 1),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -462,7 +441,7 @@ class QuestionNumber extends StatelessWidget {
           Text(
             '$remainingTime',
             style: const TextStyle(
-              fontSize: 26,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Color.fromRGBO(63, 68, 102, 1), 
             ),
