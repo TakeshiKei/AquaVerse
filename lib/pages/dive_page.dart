@@ -682,7 +682,7 @@ class _Swimmer {
   double depthMeters;
   DateTime? updatedAt;
 
-  // ✅ ukuran manual dari DB
+  // ukuran manual dari DB
   final double sizeScale;
 
   int band = 0;
@@ -705,7 +705,7 @@ class _Swimmer {
     required this.storagePath,
     required this.depthMeters,
     required this.updatedAt,
-    required this.sizeScale, // ✅
+    required this.sizeScale,
     required this.x,
     required this.yOffset,
     required this.vx,

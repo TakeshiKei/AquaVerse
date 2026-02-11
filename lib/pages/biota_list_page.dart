@@ -113,7 +113,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
       final res = await q.order('depth_meters', ascending: true).limit(300);
       _items = List<Map<String, dynamic>>.from(res);
 
-      // ✅ precache beberapa thumbnail pertama
+      // precache beberapa thumbnail pertama
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final ctx = context;
@@ -226,7 +226,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
 
             const SizedBox(height: 8),
 
-            // ✅ Scrollbar kanan (vertical) untuk list
+            // Scrollbar kanan (vertical) untuk list
             Expanded(
               child: _loading || _error != null || _items.isEmpty
                   ? _buildBody()
@@ -294,7 +294,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
     }
 
     return ListView.separated(
-      controller: _listCtrl, // ✅ ini yang bikin scrollbar muncul
+      controller: _listCtrl, // ini yang bikin scrollbar muncul
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       itemCount: _items.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
