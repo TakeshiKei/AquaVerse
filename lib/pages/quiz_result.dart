@@ -1,27 +1,77 @@
 import 'package:flutter/material.dart'; 
 import 'package:supabase_flutter/supabase_flutter.dart'; 
 import 'quiz_fill.dart'; 
+import 'display_page.dart'; 
 
-class QuizResult extends StatelessWidget {
+class QuizResult extends StatefulWidget {
   final int totalQuestions;
   final int score; 
-  final String? bgImgUrl; 
 
   const QuizResult({
     super.key,
     required this.totalQuestions,
     required this.score, 
-    this.bgImgUrl
   });
 
   @override
+  State<QuizResult> createState() => _QuizResultState(); 
+}
+
+
+class _QuizResultState extends State<QuizResult> {
+  final supabase = Supabase.instance.client;
+  bool _hasInserted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _saveQuizAttempt();
+  }
+
+  Future<void> _saveQuizAttempt() async {
+    if (_hasInserted) return;
+    _hasInserted = true;
+
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final percentageScore = (widget.score / widget.totalQuestions * 100).round();
+
+    // Insert ke quiz_attempts
+    try {
+      await supabase.from('quiz_attempts').insert({
+        'user_id': user.id,
+        'score': percentageScore,
+        'correct_count': widget.score,
+        'total_questions': widget.totalQuestions,
+      });
+      debugPrint('Quiz attempt berhasil disimpan.');
+    } catch (e) {
+      debugPrint('Gagal menambahkan quiz_attempts: $e');
+    }
+
+    // Increment points & update rank
+    try {
+      final result = await supabase.rpc('increment_points_and_update_rank', params: {
+        'p_user_id': user.id,
+        'p_add_points': widget.score,
+      });
+
+      debugPrint('Points baru: $result');
+    } catch (e, st) {
+      debugPrint('Gagal menambahkan poin!: $e');
+      debugPrint('$st');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String backgroundImgUrl = bgImgUrl ?? Supabase.instance.client.storage
+    final String backgroundImgUrl = supabase.storage
       .from('aquaverse')
       .getPublicUrl('assets/images/quiz/QuizResult-Background.png');  
     
-    final int incorrectScore = totalQuestions-score; 
-    final int percentageScore = score * 10; 
+    final int incorrectScore = widget.totalQuestions - widget.score; 
+    final int percentageScore = widget.score * 10; 
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,9 +88,9 @@ class QuizResult extends StatelessWidget {
           const FrostedGlass(), 
 
           ResultCard(
-            totalQuestions: totalQuestions, 
+            totalQuestions: widget.totalQuestions, 
             incorrectScore: incorrectScore, 
-            score: score,
+            score: widget.score,
           ), 
 
           const SizedBox(height: 20), 
@@ -86,7 +136,12 @@ class QuizResult extends StatelessWidget {
                 width: double.infinity, 
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DisplayPageWithQuizSelected(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white, 
