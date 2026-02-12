@@ -25,7 +25,7 @@ class _QuizPageState extends State<QuizPage> {
   void initState() {
     super.initState();
 
-    userFuture = fetchUserData();
+    userFuture = _waitForSessionAndFetch();
 
     aquaVerseLogoUrl = supabase.storage
         .from('aquaverse')
@@ -48,7 +48,19 @@ class _QuizPageState extends State<QuizPage> {
       .getPublicUrl('assets/images/quiz/PlayButton.png'); 
   }
 
+  Future<Map<String, dynamic>> _waitForSessionAndFetch() async {
+  final client = Supabase.instance.client;
+
+  // tunggu sampai session siap
+  while (client.auth.currentUser == null) {
+    await Future.delayed(const Duration(milliseconds: 100));
+  }
+
+  return fetchUserData();
+}
+
   Future<Map<String, dynamic>> fetchUserData() async {
+    
     final res = await supabase
         .from('profiles')
         .select('''
@@ -207,7 +219,7 @@ class _QuizPageState extends State<QuizPage> {
                         Padding(
                           padding: EdgeInsetsGeometry.symmetric(horizontal: 20),
                           child: const Text("Selesaikan Kuis", style: TextStyle(
-                            fontSize: 32, 
+                            fontSize: 28, 
                             fontFamily: 'Montserrat',
                             height: 1.4,
                             fontWeight: FontWeight.bold, 
@@ -218,7 +230,7 @@ class _QuizPageState extends State<QuizPage> {
                         Padding(
                           padding: EdgeInsetsGeometry.symmetric(horizontal: 20), 
                           child: const Text("Raih Banyak Poin!", style: TextStyle(
-                            fontSize: 24, 
+                            fontSize: 22, 
                             fontFamily: 'Montserrat',
                             height: 1.0,
                             fontWeight: FontWeight.bold, 
@@ -337,7 +349,7 @@ class ProfilPrestasi extends StatelessWidget {
                 Text(
                   "Profil Prestasi",
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontFamily: 'Montserrat',
                     fontWeight: FontWeight.bold,
                     color:
@@ -392,12 +404,12 @@ class ProfilPrestasi extends StatelessWidget {
                           ),
                           child: Text('USN: $username',
                             style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 13,
                                 )),
                         ), 
                         const SizedBox(height: 1,), 
                         Text(name, style: TextStyle(
-                          fontSize: 20, 
+                          fontSize: 18, 
                           fontWeight: FontWeight.bold, 
                           )
                         ),
@@ -406,8 +418,9 @@ class ProfilPrestasi extends StatelessWidget {
                           fontStyle: FontStyle.italic, 
                         ),),
                         const SizedBox(height: 8,), 
+
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end, 
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween, 
                           children: <Widget>[
                             Container(
                               width: 20, 
@@ -426,6 +439,7 @@ class ProfilPrestasi extends StatelessWidget {
                             ),)
                           ],
                         ),
+
                         const SizedBox(height: 5,), 
                         SizedBox(
                           width: 162,
@@ -488,7 +502,7 @@ class TingkatkanPoin extends StatelessWidget {
                       fontFamily: 'Montserrat', 
                       fontWeight: FontWeight.bold, 
                       color: Color.fromRGBO(63, 68, 102, 1), 
-                      fontSize: 20, 
+                      fontSize: 18, 
                     ),),
 
                     SizedBox(
@@ -503,7 +517,7 @@ class TingkatkanPoin extends StatelessWidget {
                     ), 
 
                     Text(nextRankMessage, style: TextStyle(
-                      fontSize: 15, 
+                      fontSize: 13, 
                       fontStyle: FontStyle.italic
                     ),)
                   ],

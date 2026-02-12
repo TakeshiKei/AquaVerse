@@ -110,7 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.red, 
+        backgroundColor: Colors.white, 
         body: Stack(
           children: [
             Container(color: Colors.white), 
@@ -118,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ClipPath(
               clipper: WaveClipper(), 
               child: SizedBox(
-                height: 200,
+                height: 150,
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
@@ -146,7 +146,6 @@ class _RegisterPageState extends State<RegisterPage> {
               child: SingleChildScrollView(
                 reverse: true, 
                 child: Container(
-                  // height: 710, 
                   width: double.infinity,
                   color: Colors.white, 
                   child: Padding(
@@ -156,14 +155,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         const Text("Registrasi", 
                         style: TextStyle(
-                          fontSize: 40, 
+                          fontSize: 36, 
                           fontWeight: FontWeight.bold, 
                         )
                       ), 
                         const SizedBox(height: 10,), 
                         const Text('Daftarkan AquaAccount sekarang. Jelajahi dan bongkar rahasia paling gelap dalam laut dalam!', 
                           style: TextStyle(
-                            fontSize: 15, 
+                            fontSize: 13, 
                             color: Color.fromRGBO(45, 45, 45, 1)
                           ),
                         ),
@@ -173,7 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             hintText: 'Masukkan Username di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200], 
@@ -189,7 +188,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             hintText: 'Masukkan Nama di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -205,7 +204,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             hintText: 'Masukkan E-mail di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -222,7 +221,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                             hintText: 'Masukkan Password di sini...',
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -233,7 +232,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ), 
                         
-                        const SizedBox(height: 55,), 
+                        const SizedBox(height: 25,), 
                         SizedBox(
                           width: double.infinity, 
                           height: 45,
@@ -248,13 +247,13 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: Text(
                               'Daftarkan', 
                               style: TextStyle(
-                                fontSize: 15, 
+                                fontSize: 13, 
                                 color: Colors.black
                               ),
                             ),
                           ),
                         ), 
-                        const SizedBox(height: 35,), 
+                        const SizedBox(height: 25,), 
                         const Center(
                           child: Text(
                             'Copyright © 2025 AquaVerse. All rights reserved', 
@@ -263,7 +262,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               color: Color.fromRGBO(45, 45, 45, 1)
                             ),
                           ),
-                        )
+                        ),
+                        const SizedBox(height: 30,)
                       ]
                     ),
                   ),

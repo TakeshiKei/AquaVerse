@@ -34,34 +34,34 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _getUserInfo(); 
-    _getUserProgress();
+    // _getUserProgress(); 
     _startAutoScroll();
   }
 
-  Future<void> _getUserProgress() async {
-    final user = Supabase.instance.client.auth.currentUser;
+  // Future<void> _getUserProgress() async {
+  //   final user = Supabase.instance.client.auth.currentUser;
 
-    if (user != null) {
-      try{
-        final response = await Supabase.instance.client
-            .from('user_progress')
-            .select('streak, explored, dailych')
-            .eq('id', user.id)
-            .single();
+  //   if (user != null) {
+  //     try{
+  //       final response = await Supabase.instance.client
+  //           .from('user_progress')
+  //           .select('streak, explored, dailych')
+  //           .eq('id', user.id)
+  //           .single();
 
-        if (mounted){
-          setState(() {
-            _streak = response['streak'] ?? 0;
-            _explored = response['explored'] ?? 0;
-            _dailych = (response['dailych'] ?? 0).toDouble();
-          });
-        }
-      } catch (e){
-        print('Error fetching user progress: $e');
-      }
-    }
+  //       if (mounted){
+  //         setState(() {
+  //           _streak = response['streak'] ?? 0;
+  //           _explored = response['explored'] ?? 0;
+  //           _dailych = (response['dailych'] ?? 0).toDouble();
+  //         });
+  //       }
+  //     } catch (e){
+  //       print('Error fetching user progress: $e');
+  //     }
+  //   }
     
-  }
+  // }
 
   void _getUserInfo() {
     final user = Supabase.instance.client.auth.currentUser;
