@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../image/image_url_cache.dart';
 import 'dive_page.dart';
 import 'biota_info_sheet.dart';
 
@@ -23,7 +24,6 @@ class _BiotaListPageState extends State<BiotaListPage> {
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
 
-  // ✅ Scroll controller biar scrollbar “nempel” (wajib)
   final ScrollController _listCtrl = ScrollController();
   final ScrollController _chipCtrl = ScrollController();
 
@@ -113,7 +113,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
       final res = await q.order('depth_meters', ascending: true).limit(300);
       _items = List<Map<String, dynamic>>.from(res);
 
-      // ✅ precache beberapa thumbnail pertama
+      // precache beberapa thumbnail pertama
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final ctx = context;
@@ -149,7 +149,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Biota Laut')),
+      appBar: AppBar(title: const Text('Logbook Biota')),
       body: SafeArea(
         child: Column(
           children: [
@@ -226,28 +226,20 @@ class _BiotaListPageState extends State<BiotaListPage> {
 
             const SizedBox(height: 8),
 
-            // ✅ Scrollbar kanan (vertical) untuk list
+            // Scrollbar kanan (vertical) untuk list
             Expanded(
-              child: RawScrollbar(
-                controller: _listCtrl,
-                thumbVisibility: true, // always show
-                thickness: 7,
-                radius: const Radius.circular(999),
-                child: _buildBody(),
-              ),
+              child: _loading || _error != null || _items.isEmpty
+                  ? _buildBody()
+                  : RawScrollbar(
+                      controller: _listCtrl,
+                      thumbVisibility: true, // always show
+                      thickness: 7,
+                      radius: const Radius.circular(999),
+                      child: _buildBody(),
+                    ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DivePage()),
-          );
-        },
-        icon: const Icon(Icons.waves),
-        label: const Text('Dive'),
       ),
     );
   }
@@ -290,7 +282,7 @@ class _BiotaListPageState extends State<BiotaListPage> {
     }
 
     return ListView.separated(
-      controller: _listCtrl, // ✅ ini yang bikin scrollbar muncul
+      controller: _listCtrl, // ini yang bikin scrollbar muncul
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       itemCount: _items.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -429,23 +421,4 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
-}
-
-/// =======================
-/// GLOBAL URL CACHE (string URL saja)
-/// =======================
-class ImageUrlCache {
-  ImageUrlCache._();
-
-  static final Map<String, String> _cache = {};
-
-  static String publicUrl({required String bucket, required String path}) {
-    final key = '$bucket|$path';
-    return _cache.putIfAbsent(
-      key,
-      () => Supabase.instance.client.storage.from(bucket).getPublicUrl(path),
-    );
-  }
-
-  static void clear() => _cache.clear();
 }

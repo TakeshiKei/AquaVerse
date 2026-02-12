@@ -1,43 +1,38 @@
-import 'package:flutter/material.dart'; 
-import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key}); 
+  const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState(); 
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _usernameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  final _usernameController = TextEditingController(); 
-  final _nameController = TextEditingController(); 
-  final _emailController = TextEditingController(); 
-  final _passwordController = TextEditingController(); 
-
-  final supabase = Supabase.instance.client; 
-  bool _isLoading = false; 
+  final supabase = Supabase.instance.client;
+  bool _isLoading = false;
 
   Future<void> _register() async {
-    if(_usernameController.text.isEmpty) {
-      _showError('Username tidak boleh kosong!'); 
-      return; 
-    }
-    else if(_nameController.text.isEmpty){
-      _showError('Nama tidak boleh kosong!'); 
-      return; 
-    }
-    else if(_emailController.text.isEmpty){
-      _showError('E-mail tidak boleh kosong!'); 
-      return; 
-    }
-    else if(_passwordController.text.isEmpty){
-      _showError('Password tidak boleh kosong'); 
-      return; 
-    }
-    else if(_passwordController.text.length < 6){
-      _showError('Password tidak valid! Password minimal 6 karakter!'); 
-      return; 
+    if (_usernameController.text.isEmpty) {
+      _showError('Username tidak boleh kosong!');
+      return;
+    } else if (_nameController.text.isEmpty) {
+      _showError('Nama tidak boleh kosong!');
+      return;
+    } else if (_emailController.text.isEmpty) {
+      _showError('E-mail tidak boleh kosong!');
+      return;
+    } else if (_passwordController.text.isEmpty) {
+      _showError('Password tidak boleh kosong');
+      return;
+    } else if (_passwordController.text.length < 6) {
+      _showError('Password tidak valid! Password minimal 6 karakter!');
+      return;
     }
 
     setState(() => _isLoading = true);
@@ -47,70 +42,66 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         data: {
-          'username': _usernameController.text.trim(), 
-          'name': _nameController.text.trim(), 
-        }
-      ); 
+          'username': _usernameController.text.trim(),
+          'name': _nameController.text.trim(),
+        },
+      );
 
-      if(!mounted) return; 
+      if (!mounted) return;
 
-      Navigator.pop(context, _emailController.text.trim()); 
+      Navigator.pop(context, _emailController.text.trim());
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registrasi berhasil! Silakan login.'),
-        )
+        const SnackBar(content: Text('Registrasi berhasil! Silakan login.')),
       );
     } on AuthException catch (e) {
-      if(e.message.toLowerCase().contains('username')){
-        _showError('Username sudah digunakan!'); 
-        return; 
+      if (e.message.toLowerCase().contains('username')) {
+        _showError('Username sudah digunakan!');
+        return;
+      } else {
+        _showError(e.message);
+        return;
       }
-      else{
-        _showError(e.message); 
-        return; 
-      }
-      // if(!mounted) return; 
-      // _showError(e.toString()); 
-    } catch(e){
-      _showError('Terjadi kesalahan. Silakan coba lagi.'); 
-      return; 
-    }
-    finally {
-      if(!mounted) return; 
+      // if(!mounted) return;
+      // _showError(e.toString());
+    } catch (e) {
+      _showError('Terjadi kesalahan. Silakan coba lagi.');
+      return;
+    } finally {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   void dispose() {
-    _usernameController.dispose(); 
-    _nameController.dispose(); 
+    _usernameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
-    _passwordController.dispose(); 
+    _passwordController.dispose();
     super.dispose();
   }
 
-  late final String backgroundHomeUrl; 
-  
-  @override 
-  void initState(){
-    super.initState(); 
+  late final String backgroundHomeUrl;
+
+  @override
+  void initState() {
+    super.initState();
     backgroundHomeUrl = Supabase.instance.client.storage
-    .from('aquaverse')
-    .getPublicUrl('assets/images/login/background-login.jpeg'); 
+        .from('aquaverse')
+        .getPublicUrl('assets/images/login/background-login.jpeg');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white, 
+        backgroundColor: Colors.red, 
         body: Stack(
           children: [
             Container(color: Colors.white), 
@@ -118,7 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ClipPath(
               clipper: WaveClipper(), 
               child: SizedBox(
-                height: 150,
+                height: 200,
                   child: Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
@@ -131,21 +122,21 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ), 
 
-            Positioned(
-              top: 40, 
-              left: 16, 
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context), 
-                child: Icon(Icons.arrow_back),
-                
-              ),
+          Positioned(
+            top: 40,
+            left: 16,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: Icon(Icons.arrow_back),
             ),
+          ),
 
             Align(
               alignment: Alignment.bottomCenter,
               child: SingleChildScrollView(
                 reverse: true, 
                 child: Container(
+                  // height: 710, 
                   width: double.infinity,
                   color: Colors.white, 
                   child: Padding(
@@ -155,14 +146,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         const Text("Registrasi", 
                         style: TextStyle(
-                          fontSize: 36, 
+                          fontSize: 40, 
                           fontWeight: FontWeight.bold, 
                         )
                       ), 
                         const SizedBox(height: 10,), 
                         const Text('Daftarkan AquaAccount sekarang. Jelajahi dan bongkar rahasia paling gelap dalam laut dalam!', 
                           style: TextStyle(
-                            fontSize: 13, 
+                            fontSize: 15, 
                             color: Color.fromRGBO(45, 45, 45, 1)
                           ),
                         ),
@@ -172,7 +163,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                             hintText: 'Masukkan Username di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200], 
@@ -188,7 +179,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                             hintText: 'Masukkan Nama di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -204,7 +195,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                             hintText: 'Masukkan E-mail di sini...', 
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -221,7 +212,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           controller: _passwordController,
                           obscureText: true,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 10),
                             hintText: 'Masukkan Password di sini...',
                             filled: true, 
                             fillColor: Colors.grey[200],
@@ -232,7 +223,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ), 
                         
-                        const SizedBox(height: 25,), 
+                        const SizedBox(height: 55,), 
                         SizedBox(
                           width: double.infinity, 
                           height: 45,
@@ -247,13 +238,13 @@ class _RegisterPageState extends State<RegisterPage> {
                             child: Text(
                               'Daftarkan', 
                               style: TextStyle(
-                                fontSize: 13, 
+                                fontSize: 15, 
                                 color: Colors.black
                               ),
                             ),
                           ),
                         ), 
-                        const SizedBox(height: 25,), 
+                        const SizedBox(height: 35,), 
                         const Center(
                           child: Text(
                             'Copyright © 2025 AquaVerse. All rights reserved', 
@@ -262,17 +253,16 @@ class _RegisterPageState extends State<RegisterPage> {
                               color: Color.fromRGBO(45, 45, 45, 1)
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 30,)
+                        )
                       ]
                     ),
                   ),
                 ),
               ),
-            )
-          ],
-        )
-      );
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -289,10 +279,18 @@ class WaveClipper extends CustomClipper<Path> {
     var secondEndPoint = Offset(size.width, size.height - 40);
 
     path.quadraticBezierTo(
-        firstControlPoint.dx, firstControlPoint.dy, firstEndPoint.dx, firstEndPoint.dy);
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
 
     path.quadraticBezierTo(
-        secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
+      secondControlPoint.dx,
+      secondControlPoint.dy,
+      secondEndPoint.dx,
+      secondEndPoint.dy,
+    );
 
     path.lineTo(size.width, 0);
     path.close();
