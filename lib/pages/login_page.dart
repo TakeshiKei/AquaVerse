@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart'; 
-import 'package:supabase_flutter/supabase_flutter.dart'; 
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'display_page.dart';
-import 'register_page.dart'; 
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key}); 
+  const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState(); 
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _identifierController = TextEditingController(); 
-  final _passwordController = TextEditingController(); 
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  final supabase = Supabase.instance.client; 
-  bool _isLoading = false; 
+  final supabase = Supabase.instance.client;
+  bool _isLoading = false;
 
   late final String backgroundHomeUrl;
   late final String textAquaVerseUrl;
@@ -64,16 +64,18 @@ class _LoginPageState extends State<LoginPage> {
           emailToLogin = result['email'];
         } catch (e) {
           if (e is AuthException) rethrow;
-          
-          print('Error lookup username: $e'); 
-          throw AuthException('Gagal memverifikasi username. Gunakan Email saja.');
+
+          print('Error lookup username: $e');
+          throw AuthException(
+            'Gagal memverifikasi username. Gunakan Email saja.',
+          );
         }
       }
 
       final response = await supabase.auth.signInWithPassword(
         email: emailToLogin,
-        password: password
-      ); 
+        password: password,
+      );
 
       if (response.user != null) {
         if (!mounted) return;
@@ -83,21 +85,18 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } on AuthException catch (e) {
-      _showError(e.message); 
+      _showError(e.message);
     } catch (e) {
       _showError("Terjadi kesalahan sistem. Coba lagi nanti.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  } 
+  }
 
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
     );
   }
 
@@ -113,153 +112,180 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Stack(
         children: [
-          Container(color: Colors.white,), 
+          Container(color: Colors.white),
 
           ClipPath(
-            clipper: WaveClipper(), 
+            clipper: WaveClipper(),
             child: Container(
-              height: 280,
+              height: 240,
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: NetworkImage(backgroundHomeUrl), 
-                  fit: BoxFit.cover, 
-                  alignment: const Alignment(0, -0.93)
-                )
+                  image: NetworkImage(backgroundHomeUrl),
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, -0.93),
+                ),
               ),
               child: Center(
                 child: Container(
-                  width: MediaQuery.of(context).size.width * 0.8, 
-                  height: 200, 
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: 200,
                   decoration: BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage(textAquaVerseUrl), 
-                      fit: BoxFit.fitWidth
-                    )
+                      image: NetworkImage(textAquaVerseUrl),
+                      fit: BoxFit.fitWidth,
+                    ),
                   ),
-                )
+                ),
               ),
             ),
           ),
 
-          Align(
-            alignment: Alignment.bottomCenter, 
+          Positioned(
+            top: 250,
+            left: 0,
+            right: 0,
             child: Container(
-              height: 550, 
+              height: 550,
               width: double.infinity,
-              color: Colors.white, 
+              color: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25), 
+                padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start, 
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 40,), 
-                      const Text("Selamat Datang", 
+                      const SizedBox(height: 15),
+                      const Text(
+                        "Selamat Datang",
                         style: TextStyle(
-                          fontSize: 40, 
-                          fontWeight: FontWeight.bold, 
-                        ),
-                      ), 
-                      const SizedBox(height: 10,),
-                      const Text("Gunakan akun terdaftar Anda untuk memasuki AquaVerse dan telusuri rahasia dalam laut! ", 
-                        style: TextStyle(
-                          fontSize: 15, 
-                          color: Color.fromRGBO(45, 45, 45, 1)
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 20,), 
-                      
-                      const Text("E-mail / Username"), 
-                      const SizedBox(height: 5,), 
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Gunakan akun terdaftar Anda untuk memasuki AquaVerse dan telusuri rahasia dalam laut! ",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color.fromRGBO(45, 45, 45, 1),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      const Text("E-mail / Username"),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: _identifierController,
                         decoration: InputDecoration(
                           hintText: "Masukkan E-mail atau Username...",
-                          filled: true, 
-                          fillColor: Colors.grey[200], 
+                          filled: true,
+                          fillColor: Colors.grey[200],
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 10,
+                          ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10), 
-                            borderSide: BorderSide.none
-                          )
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 15,), 
-                      const Text("Password"), 
-                      const SizedBox(height: 5,), 
+                      const SizedBox(height: 13),
+                      const Text("Password"),
+                      const SizedBox(height: 5),
                       TextField(
-                        controller: _passwordController, 
+                        controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
-                          hintText: "Masukkan password di sini...", 
-                          filled: true, 
-                          fillColor: Colors.grey[200], 
+                          hintText: "Masukkan password di sini...",
+                          filled: true,
+                          fillColor: Colors.grey[200],
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 10,
+                          ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10), 
-                            borderSide: BorderSide.none, 
-                          )
-                        ),
-                      ), 
-                      const SizedBox(height: 22,), 
-                      const Text(
-                        "Atau Registrasi untuk AquaAccount. Dengan Registrasi, Anda setuju dengan Syarat dan Ketentuan.", 
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Color.fromRGBO(45, 45, 45, 1)
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 23,), 
-                      
+                      const SizedBox(height: 22),
+                      const Text(
+                        "Atau Registrasi untuk AquaAccount. Dengan Registrasi, Anda setuju dengan Syarat dan Ketentuan.",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color.fromRGBO(45, 45, 45, 1),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
                       SizedBox(
-                        width: double.infinity, 
-                        height: 45, 
+                        width: double.infinity,
+                        height: 45,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(105, 202, 249, 1), 
+                            backgroundColor: const Color.fromRGBO(
+                              105,
+                              202,
+                              249,
+                              1,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), 
-                            )
-                          ),
-                          onPressed: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()),);
-                          },
-                          child: const Text(
-                            "Registrasi", 
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.black
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                        ),
-                      ), 
-                      const SizedBox(height: 10,), 
-                      
-                      SizedBox(
-                        width: double.infinity, 
-                        height: 45, 
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(39, 46, 94, 1),  
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10), 
-                            )
-                          ),
-                          onPressed: _isLoading ? null : _login,
-                          child: _isLoading 
-                            ? const SizedBox(
-                                height: 20, 
-                                width: 20, 
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                              )
-                            : const Text(
-                                "Masuk",
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.white
-                                ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterPage(),
                               ),
+                            );
+                          },
+                          child: const Text(
+                            "Registrasi",
+                            style: TextStyle(fontSize: 13, color: Colors.black),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 20), 
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromRGBO(
+                              39,
+                              46,
+                              94,
+                              1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: _isLoading ? null : _login,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  "Masuk",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -268,7 +294,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ],
       ),
-    ); 
+    );
   }
 }
 
@@ -281,12 +307,23 @@ class WaveClipper extends CustomClipper<Path> {
     var firstEndPoint = Offset(size.width / 2, size.height - 40);
     var secondControlPoint = Offset(3 * size.width / 4, size.height - 80);
     var secondEndPoint = Offset(size.width, size.height - 40);
-    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy, firstEndPoint.dx, firstEndPoint.dy);
-    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
+    path.quadraticBezierTo(
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
+    path.quadraticBezierTo(
+      secondControlPoint.dx,
+      secondControlPoint.dy,
+      secondEndPoint.dx,
+      secondEndPoint.dy,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;
   }
+
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

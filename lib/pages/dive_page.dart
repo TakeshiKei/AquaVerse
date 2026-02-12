@@ -8,7 +8,7 @@ import 'dart:collection';
 import '../image/fish_sprite.dart';
 import '../image/image_url_cache.dart';
 import 'biota_info_sheet.dart';
-import 'biota_list_page.dart'; // Pastikan import ini ada untuk navigasi logbook
+import 'biota_list_page.dart';
 
 final supabase = Supabase.instance.client;
 

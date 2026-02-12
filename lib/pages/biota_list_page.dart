@@ -241,18 +241,6 @@ class _BiotaListPageState extends State<BiotaListPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DivePage()),
-          );
-        },
-        icon: const Icon(Icons.waves),
-        label: const Text('Dive'),
-        backgroundColor: Color.fromRGBO(30, 134, 185, 1), // warna tombol
-        foregroundColor: Colors.white, // warna icon + text
-      ),
     );
   }
 
