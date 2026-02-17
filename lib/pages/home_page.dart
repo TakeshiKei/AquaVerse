@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.9, // Tinggi 90% layar
+          height: MediaQuery.of(context).size.height * 0.85, // Tinggi 90% layar
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -159,14 +159,6 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _getUserInfo(); 
-    _getUserProgress();
-    _startAutoScroll();
   }
 
 Future<void> _getUserProgress() async {
@@ -336,6 +328,14 @@ final rankResponse = await supabase
     setState(() {});
   }
 
+    @override
+  void initState() {
+    super.initState();
+    _getUserInfo(); 
+    _getUserProgress();
+    _startAutoScroll();
+  }
+  
   @override
   void dispose() {
     _timer?.cancel();
@@ -446,7 +446,7 @@ final rankResponse = await supabase
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.grey.withOpacity(0.2),
+                                  color: Colors.grey.withValues(alpha: 0.2),
                                   blurRadius: 3,
                                   offset: const Offset(0, 3),
                                 ),
@@ -490,9 +490,10 @@ final rankResponse = await supabase
                       padding: const EdgeInsets.fromLTRB(14, 5, 14, 0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const Text(
-                            "LATEST NEWS",
+                            "Berita Populer",
                             style: TextStyle(
                               fontFamily: "Montserrat",
                               fontSize: 24, 
@@ -505,8 +506,8 @@ final rankResponse = await supabase
                               }
                             },
                             child: const Text(
-                              "View All",
-                              style: TextStyle(fontSize: 14, color: Colors.blue),
+                              "Lihat Semua",
+                              style: TextStyle(fontSize: 13, color: Colors.blue),
                             ),
                           ),
                         ],
@@ -578,11 +579,13 @@ final rankResponse = await supabase
                       ),
                     ),
 
+                    const SizedBox(height: 10,), 
+
                     // ===== SECTION DAILY CHALLENGES =====
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 14),
                       child: Text(
-                        "Daily Challenges",
+                        "Tantangan Harian",
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -597,8 +600,8 @@ final rankResponse = await supabase
                       child: Row(
                         children: [
                           Container(
-                            width: 80,
-                            height: 80,
+                            width: 70,
+                            height: 70,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
@@ -617,14 +620,15 @@ final rankResponse = await supabase
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Text(
-                                  "Your Progress",
+                                  "Progress Anda",
                                   style: TextStyle(
                                     fontSize: 18, 
                                     fontWeight: FontWeight.bold,
                                     color: Color.fromARGB(255, 0, 0, 0),
+                                    height: 1.2
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 5),
                                 
                                 ClipRRect(
                                   borderRadius: const BorderRadius.all(Radius.circular(4)),
@@ -637,13 +641,14 @@ final rankResponse = await supabase
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 5),
 
                                 const Text(
-                                  "Read 5 news articles to complete this challenge.",
+                                  "Baca 5 artikel berita untuk menyelesaikan tantangan ini!",
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Color.fromARGB(255, 0, 0, 0),
+                                    color: Color.fromARGB(255, 0, 0, 0), 
+                                    height: 1.2
                                   ),
                                   maxLines: 2, 
                                   overflow: TextOverflow.ellipsis,

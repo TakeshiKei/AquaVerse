@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../class/news_class.dart'; 
 import 'package:intl/intl.dart'; 
 import 'dart:async'; // untuk Timer 
+import '../components/latestnewstile.dart'; 
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key}); 
@@ -28,7 +29,7 @@ class _NewsPageState extends State<NewsPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.9, // Tinggi 90% layar
+          height: MediaQuery.of(context).size.height * 0.85, // Tinggi 90% layar
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -149,6 +150,28 @@ class _NewsPageState extends State<NewsPage> {
 
   bool get isSearching => _searchQuery.isNotEmpty;
 
+  late Future<List<News>> _newsFuture = _fetchCarouselNews();
+
+  Future<List<News>> _fetchCarouselNews() async {
+    try {
+      final supabase = Supabase.instance.client;
+
+      final response = await supabase
+          .from('news')
+          .select('id, author, title, image_url, content, publishTime, userpicture, category')
+          .order('id', ascending: false)
+          .limit(3);
+
+      final List<dynamic> data = response;
+
+      return data.map((row) {
+        final map = Map<String, dynamic>.from(row as Map);
+        return News.fromJson(map);
+      }).toList();
+    } catch (e) {
+      throw Exception('Gagal load berita: $e');
+    }
+  }
 
   Future<void> _fetchNews({String query = ''}) async {
     setState(() => _isLoading = true);
@@ -177,16 +200,46 @@ class _NewsPageState extends State<NewsPage> {
     }
   }
 
+    final PageController _pageController = PageController(
+    viewportFraction: 0.88,
+  );
+  int _currentPage = 0;
+  Timer? _timer;
+  List<News>? _newsCache; 
+
+  void _startAutoScroll() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
+      if (_newsCache != null && _newsCache!.isNotEmpty) {
+        if (_currentPage < _newsCache!.length - 1) {
+          _currentPage++;
+        } else {
+          _currentPage = 0;
+        }
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            _currentPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      }
+    });
+  }
+
   @override
   void initState(){
     super.initState(); 
     _fetchNews(); 
+    _newsFuture = _fetchCarouselNews(); 
+    _startAutoScroll(); 
   }
 
   @override
   void dispose(){
     _debounce?.cancel(); 
     super.dispose(); 
+    _timer?.cancel(); 
+    _pageController.dispose(); 
   }
 
   @override
@@ -204,6 +257,7 @@ class _NewsPageState extends State<NewsPage> {
     DateTime now = DateTime.now(); 
     String formattedDate = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now); 
 
+    final screenHeight = MediaQuery.of(context).size.height; 
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Background agak abu dikit biar Card putihnya "pop out"
@@ -309,6 +363,70 @@ class _NewsPageState extends State<NewsPage> {
                           color: Colors.black
                         ),),
                       ),
+
+                      SizedBox(
+                      height: 280, 
+                      child: FutureBuilder<List<News>>(
+                        future: _newsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if (snapshot.hasError) {
+                            return const Center(child: Text("Failed to Fetch News"));
+                          }
+                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Center(child: Text("Belum ada berita terbaru"));
+                          }
+
+                          _newsCache = snapshot.data!;
+
+                          return Column(
+                            children: [
+                              Expanded(
+                                child: PageView.builder(
+                                  controller: _pageController,
+                                  itemCount: snapshot.data!.length,
+                                  onPageChanged: (index) => setState(() => _currentPage = index),
+                                  
+                                  itemBuilder: (context, index) {
+                                    final news = snapshot.data![index];
+                                    
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                                      child: InkWell(
+                                        onTap: () => _showNewsDetail(context, news), 
+                                        borderRadius: BorderRadius.circular(16), 
+                                        child: LatestNewsTile(news: news),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(
+                                  snapshot.data!.length,
+                                  (index) => AnimatedContainer(
+                                    duration: const Duration(milliseconds: 500),
+                                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                                    width: _currentPage == index ? 22 : 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: _currentPage == index 
+                                          ? Colors.blue 
+                                          : Colors.grey.shade400,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                     ],
 
                     const SizedBox(height: 10,), 
@@ -321,14 +439,6 @@ class _NewsPageState extends State<NewsPage> {
                           child: CircularProgressIndicator(),
                         ),
                       ),
-                    
-                    if (isSearching && _newsList.isEmpty) 
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Text("Tidak ada berita yang sesuai!"),
-                        ),
-                      ), 
 
                     if(isSearching)...[
                       Padding(
@@ -353,6 +463,17 @@ class _NewsPageState extends State<NewsPage> {
                           ),),
                       ),
                     ],
+
+                      if (isSearching && _newsList.isEmpty) 
+                      SizedBox(
+                        height: screenHeight * 0.5,
+                        child: const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24),
+                            child: Text("Tidak ada berita yang sesuai!", textAlign: TextAlign.center,),
+                          ),
+                        ), 
+                      ), 
 
                     ListView.builder(
                       shrinkWrap: true,
