@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // Pastikan path ini sesuai sama lokasi file class lu
 import '../class/news_class.dart'; 
 import 'package:intl/intl.dart'; 
+import 'dart:async'; // untuk Timer 
 
 class NewsPage extends StatefulWidget {
   const NewsPage({super.key}); 
@@ -16,12 +17,6 @@ class _NewsPageState extends State<NewsPage> {
   final String _storageBucket = 'aquaverse';
   final String _storageFolder = 'assets/images/news';
   final supabase = Supabase.instance.client; 
-
-  // Stream data, diurutkan berdasarkan publishTime terbaru
-  final _newsStream = Supabase.instance.client
-      .from('news')
-      .stream(primaryKey: ['id'])
-      .order('publishTime', ascending: false); 
 
   // --- LOGIC: Popup Detail Berita ---
   void _showNewsDetail(BuildContext context, News item) {
@@ -127,6 +122,55 @@ class _NewsPageState extends State<NewsPage> {
     );
   }
 
+  List<News> _newsList = []; 
+  bool _isLoading = false; 
+  String _searchQuery = ''; 
+  Timer? _debounce; 
+
+  bool get isSearching => _searchQuery.isNotEmpty;
+
+
+  Future<void> _fetchNews({String query = ''}) async {
+    setState(() => _isLoading = true);
+    try {
+      final response = query.isEmpty
+          ? await supabase.from('news').select().order('publishTime', ascending: false)
+          : await supabase.from('news').select().ilike('title', '%${query.trim()}%').order('publishTime', ascending: false);
+
+      if (response.isEmpty) {
+        debugPrint("Response kosong");
+      } else {
+        for (var item in response) {
+          debugPrint("Cek URL image: ${item['image_url']}");
+        }
+      }
+
+      final news = (response as List)
+          .map((item) => News.fromJson(item))
+          .toList();
+
+      setState(() {
+        _newsList = news;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetch news: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void initState(){
+    super.initState(); 
+    _fetchNews(); 
+  }
+
+  @override
+  void dispose(){
+    _debounce?.cancel(); 
+    super.dispose(); 
+  }
+
   @override
   Widget build(BuildContext context) {
     
@@ -141,6 +185,7 @@ class _NewsPageState extends State<NewsPage> {
     Intl.defaultLocale = 'id_ID'; 
     DateTime now = DateTime.now(); 
     String formattedDate = DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(now); 
+
 
     return Scaffold(
       backgroundColor: Colors.grey[50], // Background agak abu dikit biar Card putihnya "pop out"
@@ -180,6 +225,13 @@ class _NewsPageState extends State<NewsPage> {
                       right: 15
                     ),
                     child: TextField(
+                      onChanged: (value) {
+                        if (_debounce?.isActive ?? false) _debounce!.cancel();
+                          _debounce = Timer(const Duration(milliseconds: 500), () {
+                            _searchQuery = value; 
+                            _fetchNews(query: value);
+                          });
+                      },
                       decoration: InputDecoration(
                         hintText: "Telusuri: Berita Kelautan...",
                         prefixIcon: Icon(Icons.search),
@@ -208,176 +260,199 @@ class _NewsPageState extends State<NewsPage> {
 
           SafeArea(
             child: Padding(
-              padding: EdgeInsetsGeometry.only(top: 170),
+              padding: EdgeInsets.only(top: 170),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start, 
                   children: [
-                    Padding(
-                      padding: EdgeInsetsGeometry.symmetric(horizontal: 20),
-                      child: const Text("Berita Populer", style: TextStyle(
-                        fontSize: 28, 
-                        fontFamily: 'Montserrat',
-                        height: 1.4,
-                        fontWeight: FontWeight.bold, 
-                        color: Color.fromRGBO(63, 68, 102, 1), 
-                      ),), 
-                    ),
-                    
-                    Padding(
-                      padding: EdgeInsetsGeometry.symmetric(horizontal: 20), 
-                      child: Text(formattedDate, style: TextStyle(
-                        fontSize: 22, 
-                        fontFamily: 'Montserrat',
-                        height: 1.0,
-                        fontWeight: FontWeight.bold, 
-                        color: Colors.black
-                      ),),
-                    ),
+
+              
+                    if(!isSearching)...[
+                        Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: const Text("Berita Populer", style: TextStyle(
+                          fontSize: 28, 
+                          fontFamily: 'Montserrat',
+                          height: 1.4,
+                          fontWeight: FontWeight.bold, 
+                          color: Color.fromRGBO(63, 68, 102, 1), 
+                        ),), 
+                      ),
+                      
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20), 
+                        child: Text(formattedDate, style: TextStyle(
+                          fontSize: 22, 
+                          fontFamily: 'Montserrat',
+                          height: 1.0,
+                          fontWeight: FontWeight.bold, 
+                          color: Colors.black
+                        ),),
+                      ),
+                    ],
 
                     const SizedBox(height: 10,), 
 
-                    // List Berita
-                    StreamBuilder<List<Map<String, dynamic>>>(
-                      stream: _newsStream,
-                      builder: (context, snapshot) {
-                        // 1. Loading
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                        // 2. Error
-                        if (snapshot.hasError) {
-                          return Center(child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text("Error: ${snapshot.error}", textAlign: TextAlign.center),
-                          ));
-                        }
-                        // 3. Kosong
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return Center(child: Text("Belum ada berita."));
-                        }
+                    // Loading Berita 
+                    if (_isLoading) 
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    
+                    else if (_newsList.isEmpty) 
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24),
+                          child: Text("Belum ada berita."),
+                        ),
+                      )
+                    else 
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(bottom: 20),
+                      itemCount: _newsList.length,
+                      itemBuilder: (context, index) {
+                        final item = _newsList[index];
 
-                        // --- LOGIC FIX IMAGE URL ---
-                        final newsList = snapshot.data!.map((data) {
-                          String rawUrl = (data['image_url'] ?? '').toString();
-                          // Cek apakah URL masih mentah (nama file doang)
-                          if (rawUrl.isNotEmpty && !rawUrl.startsWith('http')) {
-                            final publicUrl = Supabase.instance.client
-                                .storage
-                                .from(_storageBucket)
-                                .getPublicUrl('$_storageFolder/$rawUrl');
-                            data['image_url'] = publicUrl;
-                          }
-                          return News.fromJson(data);
-                        }).toList();
+                        final userImagePlaceholder = item.userpicture;
+                        final userImageUrl = supabase.storage
+                            .from(_storageBucket)
+                            .getPublicUrl('$_storageFolder/$userImagePlaceholder');
 
-                        return ListView.builder(
-                          shrinkWrap: true, 
-                          physics: NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.only(bottom: 20),
-                          itemCount: newsList.length,
-                          itemBuilder: (context, index) {
-                            final item = newsList[index]; 
-                            final userImagePlaceholder = item.userpicture; 
-                            final userImageUrl = supabase.storage.from('aquaverse')
-                              .getPublicUrl('assets/images/news/$userImagePlaceholder'); 
+                        final newsImagePlaceholder = item.imageUrl; 
+                        final newsImageUrl = supabase.storage
+                          .from(_storageBucket)
+                          .getPublicUrl('assets/images/news/$newsImagePlaceholder'); 
 
-                            final monthShort = DateFormat('MMMM', 'id_ID').format(item.publishTime);
+                        final monthShort =
+                            DateFormat('MMMM', 'id_ID').format(item.publishTime);
 
-                            // --- CARD DESIGN (Float & Rounded) ---
-                            return Card(
-                              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              elevation: 3, // Bayangan biar ngambang
-                              shadowColor: Colors.blue.withValues(alpha: 0.1), // Bayangan agak biru dikit
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              color: Colors.white,
-                              child: InkWell(
-                                onTap: () => _showNewsDetail(context, item),
-                                borderRadius: BorderRadius.circular(16),
-                                child: Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Gambar Kiri
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: item.imageUrl.isNotEmpty
-                                            ? Image.network(
-                                                item.imageUrl, 
-                                                width: 90, 
-                                                height: 90, 
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) => Container(width: 90, height: 90, color: Colors.grey[200], child: Icon(Icons.broken_image, color: Colors.grey)), 
-                                              )
-                                            : Container(width: 90, height: 90, color: Colors.grey[200], child: Icon(Icons.image, color: Colors.grey)),
-                                      ),
-                                      SizedBox(width: 16),
-                                      
-                                      // Konten Kanan
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            // Kategori
-                                            Text(
-                                              item.category, 
-                                              style: TextStyle(color: Colors.black.withValues(alpha: 0.5), fontSize: 11, fontWeight: FontWeight.w700)
-                                            ),
-                                            SizedBox(height: 4),
-                                            // Judul
-                                            Text(
-                                              item.title, 
-                                              maxLines: 2, 
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)
-                                            ),
-                                            SizedBox(height: 8),
-                                            // Author & Tanggal
-                                            Row(
-                                              children: [
+                        return Card(
+                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          elevation: 3,
+                          shadowColor: Colors.blue.withValues(alpha: 0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: Colors.white,
+                          child: InkWell(
+                            onTap: () => _showNewsDetail(context, item),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // IMAGE
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    
+                                    child: item.imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            newsImageUrl,
+                                            width: 90,
+                                            height: 90,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) =>
                                                 Container(
-                                                  height: 22, 
-                                                  width: 22, 
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(100),
-                                                    image: DecorationImage(
-                                                      image: NetworkImage(userImageUrl), 
-                                                      fit: BoxFit.cover
-                                                    )
-                                                  ),
-                                                ), 
-                                                SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    item.author,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                                  ),
+                                              width: 90,
+                                              height: 90,
+                                              color: Colors.grey[200],
+                                              child: const Icon(Icons.broken_image,
+                                                  color: Colors.grey),
+                                            ),
+                                          )
+                                        : Container(
+                                            width: 90,
+                                            height: 90,
+                                            color: Colors.grey[200],
+                                            child:
+                                                const Icon(Icons.image, color: Colors.grey),
+                                          ),
+                                  ),
+                                  const SizedBox(width: 16),
+
+                                  // CONTENT
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.category,
+                                          style: TextStyle(
+                                            color: Colors.black.withValues(alpha: 0.5),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          item.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+
+                                        Row(
+                                          children: [
+                                            Container(
+                                              height: 22,
+                                              width: 22,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(100),
+                                                image: DecorationImage(
+                                                  image: NetworkImage(userImageUrl),
+                                                  fit: BoxFit.cover,
                                                 ),
-                                                Text("| ", style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-                                                Text(
-                                                  "${item.publishTime.day} $monthShort",
-                                                  style: TextStyle(fontSize: 11, color: Colors.grey[600])
-                                                ),
-                                              ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+
+                                            Expanded(
+                                              child: Text(
+                                                item.author,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors.grey[600]),
+                                              ),
+                                            ),
+
+                                            Text(
+                                              "| ",
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey[600]),
+                                            ),
+
+                                            Text(
+                                              "${item.publishTime.day} $monthShort",
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey[600]),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                            );
-                          },
+                            ),
+                          ),
                         );
                       },
-                    ),
-
-           
+                    ), 
                   ],
                 ),
               ),
